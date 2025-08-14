@@ -9,7 +9,7 @@ Aplicación académica modular en la cual se aplican 3 patrones de diseño espec
 
 ## Módulo y patrones
 • Módulo: Asistencia a clases  
-• Patrones:  
+• Patrones:
   - Creacional: Factory Method  
   - Estructural: Composite  
   - Comportamiento: Observer  
