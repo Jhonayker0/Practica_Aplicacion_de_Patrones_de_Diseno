@@ -1,0 +1,157 @@
+{
+  "name": "attendance-management-system",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de asistencia a clases con patrones de diseño Factory Method, Composite y Observer",
+  "main": "index.js",
+  "scripts": {
+    "//": "=== SCRIPTS DE INSTALACIÓN ===",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "reinstall:all": "npm run clean && npm run install:all",
+    
+    "//": "=== SCRIPTS DE DESARROLLO ===",
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev:frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend-only": "npm run dev:backend",
+    "dev:frontend-only": "wait-on http://localhost:3001/health && npm run dev:frontend",
+    "start": "npm run dev",
+    
+    "//": "=== SCRIPTS DE BUILD ===",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:all": "npm-run-all build:backend build:frontend",
+    "build": "npm run build:all",
+    
+    "//": "=== SCRIPTS DE TESTING ===",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend:watch": "cd backend && npm run test:watch",
+    "test:frontend:watch": "cd frontend && npm test -- --watch",
+    "test:all": "npm-run-all test:backend test:frontend",
+    "test:e2e": "cd backend && npm run test:e2e",
+    
+    "//": "=== SCRIPTS DE LIMPIEZA ===",
+    "clean:backend": "cd backend && rimraf dist node_modules",
+    "clean:frontend": "cd frontend && rimraf build node_modules",
+    "clean:all": "npm-run-all clean:backend clean:frontend",
+    "clean": "npm run clean:all",
+    "clean:cache": "npm cache clean --force",
+    
+    "//": "=== SCRIPTS DE LINTING Y FORMATEO ===",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:all": "npm-run-all lint:backend lint:frontend",
+    "lint": "npm run lint:all",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "format:all": "npm-run-all format:backend format:frontend",
+    "format": "npm run format:all",
+    
+    "//": "=== SCRIPTS DE VERIFICACIÓN ===",
+    "type-check:backend": "cd backend && npm run type-check",
+    "type-check:frontend": "cd frontend && npm run type-check",
+    "type-check:all": "npm-run-all type-check:backend type-check:frontend",
+    "type-check": "npm run type-check:all",
+    "health-check": "curl -f http://localhost:3001/health && curl -f http://localhost:3000",
+    
+    "//": "=== SCRIPTS DE BASE DE DATOS ===",
+    "db:reset": "cd database && node scripts/reset.js",
+    "db:migrate": "cd database && node scripts/migrate.js",
+    "db:seed": "cd database && node scripts/seed.js",
+    "db:backup": "cd database && node scripts/backup.js",
+    
+    "//": "=== SCRIPTS DE PRODUCCIÓN ===",
+    "prod:backend": "cd backend && npm run start:prod",
+    "prod:frontend": "cd frontend && serve -s build -l 3000",
+    "prod": "npm-run-all build:all prod:backend prod:frontend",
+    
+    "//": "=== SCRIPTS DE DEPLOYMENT ===",
+    "deploy:backend": "cd backend && npm run deploy",
+    "deploy:frontend": "cd frontend && npm run deploy",
+    "deploy:all": "npm run build:all && npm-run-all deploy:backend deploy:frontend",
+    "deploy": "npm run deploy:all",
+    
+    "//": "=== SCRIPTS DE UTILIDAD ===",
+    "logs:backend": "cd backend && npm run logs",
+    "logs:frontend": "cd frontend && npm run logs",
+    "update:deps": "npm-check-updates -u && npm run install:all",
+    "security:audit": "npm audit && cd backend && npm audit && cd ../frontend && npm audit",
+    "info": "node scripts/project-info.js",
+    "setup": "npm run install:all && npm run db:migrate && npm run db:seed",
+    
+    "//": "=== SCRIPTS DE DESARROLLO ESPECÍFICOS ===",
+    "dev:debug": "concurrently \"npm run dev:backend -- --debug\" \"npm run dev:frontend\"",
+    "dev:prod-mode": "cross-env NODE_ENV=production npm run dev",
+    "dev:api-only": "npm run dev:backend",
+    "dev:ui-only": "npm run dev:frontend",
+    
+    "//": "=== SCRIPTS DE MONITOREO ===",
+    "monitor": "concurrently \"npm run logs:backend\" \"npm run logs:frontend\"",
+    "status": "echo 'Checking project status...' && npm run health-check",
+    
+    "//": "=== SCRIPTS DE DOCUMENTACIÓN ===",
+    "docs:generate": "cd backend && npm run docs:generate && cd ../frontend && npm run docs:generate",
+    "docs:serve": "cd docs && python -m http.server 8080",
+    
+    "//": "=== SCRIPTS PERSONALIZADOS PARA PATRONES ===",
+    "demo:factory": "cd backend && npm run demo:factory-method",
+    "demo:composite": "cd backend && npm run demo:composite",
+    "demo:observer": "cd backend && npm run demo:observer",
+    "demo:patterns": "npm-run-all demo:factory demo:composite demo:observer"
+  },
+  "keywords": [
+    "attendance",
+    "management",
+    "nestjs",
+    "react",
+    "typescript",
+    "supabase",
+    "factory-method",
+    "composite",
+    "observer",
+    "design-patterns"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tu-usuario/attendance-management-system.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "npm-check-updates": "^16.14.12",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.5",
+    "wait-on": "^7.2.0",
+    "serve": "^14.2.1"
+  },
+  "config": {
+    "ports": {
+      "backend": 3001,
+      "frontend": 3000,
+      "database": 5432
+    },
+    "urls": {
+      "backend": "http://localhost:3001",
+      "frontend": "http://localhost:3000",
+      "api": "http://localhost:3001/api"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint && npm run type-check",
+      "pre-push": "npm run test:all"
+    }
+  }
+}
