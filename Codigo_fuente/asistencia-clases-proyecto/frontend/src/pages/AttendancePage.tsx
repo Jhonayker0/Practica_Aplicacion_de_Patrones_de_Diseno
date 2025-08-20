@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AttendanceComponentFactory } from '../patterns/factory/AttendanceComponentFactory';
+import { AttendanceSubject, ObserverFactory } from '../patterns/observer/AttendanceObserver';
+import NotificationPanel from '../components/common/NotificationPanel';
 import { mockCourses, mockStudents, getCurrentWeekDates, getDayName } from '../services/mockData';
-import { Course, Student, AttendanceStatus, AttendanceRecord } from '../types';
+import { Course, Student, AttendanceStatus, AttendanceRecord, AttendanceEvent } from '../types';
 
 const AttendancePage: React.FC = () => {
   // Estados para los dropdowns
@@ -20,8 +22,39 @@ const AttendancePage: React.FC = () => {
     total: mockStudents.length
   });
 
+  // Estados para el sistema Observer
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [alerts, setAlerts] = useState<string[]>([]);
+  const [observerStats, setObserverStats] = useState<any>({});
+  
+  // Referencias para los observers
+  const attendanceSubject = useRef<AttendanceSubject>(new AttendanceSubject());
+  const notificationObserver = useRef(ObserverFactory.createNotificationObserver(setNotifications));
+  const alertObserver = useRef(ObserverFactory.createAbsenteeAlertObserver((alert) => {
+    setAlerts(prev => [alert, ...prev].slice(0, 10)); // Mantener últimas 10 alertas
+  }));
+  const statsObserver = useRef(ObserverFactory.createStatisticsObserver(setObserverStats));
+
   // Fechas de la semana actual
   const weekDates = getCurrentWeekDates();
+
+  // Inicializar observers al montar el componente
+  useEffect(() => {
+    const subject = attendanceSubject.current;
+    const notifObserver = notificationObserver.current;
+    const alertObs = alertObserver.current;
+    const statsObs = statsObserver.current;
+    
+    subject.addObserver(notifObserver);
+    subject.addObserver(alertObs);
+    subject.addObserver(statsObs);
+    
+    return () => {
+      subject.removeObserver(notifObserver);
+      subject.removeObserver(alertObs);
+      subject.removeObserver(statsObs);
+    };
+  }, []);
 
   // Efecto para actualizar el curso seleccionado
   useEffect(() => {
@@ -42,12 +75,26 @@ const AttendancePage: React.FC = () => {
     setStats({ present, absent, late, total: mockStudents.length });
   }, [attendanceData]);
 
-  // Función para manejar cambios en la asistencia
+  // Función para manejar cambios en la asistencia CON OBSERVER
   const handleAttendanceChange = (studentId: string, status: AttendanceStatus) => {
+    const oldStatus = attendanceData[studentId];
+    
     setAttendanceData(prev => ({
       ...prev,
       [studentId]: status
     }));
+    
+    // NOTIFICAR A LOS OBSERVERS
+    const event: AttendanceEvent = {
+      type: oldStatus ? 'attendance_updated' : 'attendance_marked',
+      studentId,
+      courseId: selectedCourse?.id || '',
+      oldStatus,
+      newStatus: status,
+      timestamp: new Date()
+    };
+    
+    attendanceSubject.current.notifyObservers(event);
   };
 
   // Función para guardar la asistencia
@@ -67,18 +114,35 @@ const AttendancePage: React.FC = () => {
     }));
 
     // Por ahora solo mostramos una alerta, después conectaremos con el backend
-    alert(`✅ Asistencia guardada para ${selectedCourse.name} - ${getDayName(selectedDate)}\n\nResumen:\n- Presentes: ${stats.present}\n- Ausentes: ${stats.absent}\n- Tardanzas: ${stats.late}`);
+    alert(`✅ Asistencia guardada para ${selectedCourse.name} - ${getDayName(selectedDate)}\n\nResumen:\n- Presentes: ${stats.present}\n- Ausentes: ${stats.absent}\n- Tardanzas: ${stats.late}`    );
     
-    console.log('Registros de asistencia:', records);
+    // Notificar cambio en estadísticas
+    const statsEvent: AttendanceEvent = {
+      type: 'stats_changed',
+      studentId: '',
+      courseId: selectedCourse?.id || '',
+      newStatus: 'presente', // Placeholder
+      timestamp: new Date()
+    };
+    attendanceSubject.current.notifyObservers(statsEvent);
   };
 
-  // Función para marcar todos como presentes (utilidad)
+  // Función para marcar todos como presentes con notificaciones
   const markAllPresent = () => {
-    const allPresent = mockStudents.reduce((acc, student) => {
-      acc[student.id] = 'presente';
-      return acc;
-    }, {} as Record<string, AttendanceStatus>);
-    setAttendanceData(allPresent);
+    mockStudents.forEach(student => {
+      if (attendanceData[student.id] !== 'presente') {
+        handleAttendanceChange(student.id, 'presente');
+      }
+    });
+  };
+
+  // Funciones para limpiar notificaciones
+  const clearNotifications = () => {
+    notificationObserver.current.clearNotifications();
+  };
+
+  const clearAlerts = () => {
+    setAlerts([]);
   };
 
   return (
@@ -248,6 +312,15 @@ const AttendancePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* SISTEMA OBSERVER: Panel de notificaciones */}
+      <NotificationPanel
+        notifications={notifications}
+        alerts={alerts}
+        stats={observerStats}
+        onClearNotifications={clearNotifications}
+        onClearAlerts={clearAlerts}
+      />
     </div>
   );
 };
