@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model asistencias {
+  id_asistencia BigInt      @id @default(autoincrement())
+  id_estudiante BigInt
+  id_clase      BigInt?
+  estado        Boolean?
+  registrado_en DateTime?   @db.Timestamp(6)
+  clases        clases?     @relation(fields: [id_clase], references: [id_clase], onDelete: NoAction, onUpdate: NoAction)
+  estudiantes   estudiantes @relation(fields: [id_estudiante], references: [id_estudiante], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model clases {
+  id_clase    BigInt        @id @default(autoincrement())
+  id_curso    BigInt
+  fecha       DateTime?     @db.Date
+  hora        DateTime?     @db.Time(6)
+  asistencias asistencias[]
+  cursos      cursos        @relation(fields: [id_curso], references: [id_curso], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model cursos {
+  id_curso           BigInt               @id @default(autoincrement())
+  nombre_curso       String               @db.VarChar
+  id_profesor        BigInt?
+  clases             clases[]
+  profesores         profesores?          @relation(fields: [id_profesor], references: [id_profesor], onDelete: NoAction, onUpdate: NoAction)
+  estudiantes_cursos estudiantes_cursos[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model estudiantes {
+  id_estudiante      BigInt              @id @default(autoincrement())
+  nombre             String?
+  email              String?             @db.VarChar
+  asistencias        asistencias[]
+  estudiantes_cursos estudiantes_cursos?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model estudiantes_cursos {
+  id_estudiante BigInt      @id @default(autoincrement())
+  id_curso      BigInt
+  cursos        cursos      @relation(fields: [id_curso], references: [id_curso], onDelete: NoAction, onUpdate: NoAction)
+  estudiantes   estudiantes @relation(fields: [id_estudiante], references: [id_estudiante], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model profesores {
+  id_profesor BigInt   @id(map: "Profesores_pkey") @default(autoincrement())
+  nombre      String
+  email       String?  @db.VarChar
+  cursos      cursos[]
+}
